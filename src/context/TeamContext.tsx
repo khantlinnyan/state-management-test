@@ -23,15 +23,16 @@ type TeamContextType = {
   updateTeam: (team: Team) => void;
   deleteTeam: (id: string) => void;
   isTeamNameUnique: (name: string, excludeId?: string) => boolean;
-  getPlayerTeams: (playerId: number) => Team[];
+  getPlayerTeam: (playerId: number) => Team[] | undefined;
+  canAddPlayer: (teamId: string) => boolean;
+  assignPlayerToTeam: (playerId: number, teamId: string) => void;
+  removePlayerFromTeam: (playerId: number, teamId: string) => void;
 };
 
 const TeamContext = createContext<TeamContextType | undefined>(undefined);
 
 export function TeamProvider({ children }: { children: ReactNode }) {
   const [teams, setTeams] = useState<Team[]>([]);
-
-  // Load from localStorage on mount
   useEffect(() => {
     const storedTeams = localStorage.getItem("teams");
     if (storedTeams) setTeams(JSON.parse(storedTeams));
@@ -41,15 +42,41 @@ export function TeamProvider({ children }: { children: ReactNode }) {
     localStorage.setItem("teams", JSON.stringify(teams));
   }, [teams]);
 
+  const assignPlayerToTeam = (playerId: number, teamId: string) => {
+    setTeams((prevTeams) => {
+      return prevTeams.map((team) => {
+        if (team.id === teamId) {
+          if (!team.players.includes(playerId)) {
+            return {
+              ...team,
+              players: [...team.players, playerId],
+            };
+          }
+          return team;
+        }
+        return {
+          ...team,
+          players: team.players.filter((id) => id !== playerId),
+        };
+      });
+    });
+  };
+
   const isTeamNameUnique = (name: string, excludeId?: string) => {
     return !teams.some(
       (team) =>
-        team.name.toLowerCase() === name.toLowerCase() && team.id !== excludeId
+        team?.name?.toLowerCase() === name.toLowerCase() &&
+        team?.id !== excludeId
     );
   };
 
-  const getPlayerTeams = (playerId: number) => {
-    return teams.filter((team) => team.players.includes(playerId));
+  const getPlayerTeam = (playerId: number) => {
+    return teams.find((team) => team.players.includes(playerId));
+  };
+
+  const canAddPlayer = (teamId: string) => {
+    const team = teams.find((t) => t.id === teamId);
+    return team ? team.players.length < team.playerCount : false;
   };
 
   const addTeam = (team: Omit<Team, "id">) => {
@@ -62,13 +89,23 @@ export function TeamProvider({ children }: { children: ReactNode }) {
   };
 
   const updateTeam = (updatedTeam: Team) => {
-    setTeams(
-      teams.map((team) => (team.id === updatedTeam.id ? updatedTeam : team))
+    setTeams((prev) =>
+      prev.map((t) => (t.id === updatedTeam.id ? updatedTeam : t))
     );
   };
 
   const deleteTeam = (id: string) => {
-    setTeams(teams.filter((team) => team.id !== id));
+    setTeams((prev) => prev.filter((team) => team.id !== id));
+  };
+
+  const removePlayerFromTeam = (playerId: number, teamId: string) => {
+    setTeams((prev) =>
+      prev.map((team) =>
+        team.id === teamId
+          ? { ...team, players: team.players.filter((id) => id !== playerId) }
+          : team
+      )
+    );
   };
 
   return (
@@ -79,7 +116,10 @@ export function TeamProvider({ children }: { children: ReactNode }) {
         updateTeam,
         deleteTeam,
         isTeamNameUnique,
-        getPlayerTeams,
+        getPlayerTeam,
+        canAddPlayer,
+        assignPlayerToTeam,
+        removePlayerFromTeam,
       }}
     >
       {children}

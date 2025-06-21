@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import {
   createContext,
   useState,
@@ -35,14 +36,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
   const [user, setUser] = useState<string | null>(null);
-  const [teams, setTeams] = useState<Team[]>([]);
+  const router = useRouter();
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
-    const storedTeams = localStorage.getItem("teams");
     if (storedUser) setUser(storedUser);
-    if (storedTeams) setTeams(JSON.parse(storedTeams));
-  }, []);
+  }, [user]);
 
   const login = async (username: string): Promise<boolean> => {
     try {
@@ -59,36 +58,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   // Update your logout function
   const logout = () => {
     setUser(null);
-    setTeams([]);
     localStorage.removeItem("user");
-    localStorage.removeItem("teams");
     document.cookie = "user=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-  };
-
-  const addTeam = (team: Team) => {
-    const newTeams = [...teams, team];
-    setTeams(newTeams);
-    localStorage.setItem("teams", JSON.stringify(newTeams));
-  };
-
-  const updateTeam = (updatedTeam: Team) => {
-    const newTeams = teams.map((team) =>
-      team.id === updatedTeam.id ? updatedTeam : team
-    );
-    setTeams(newTeams);
-    localStorage.setItem("teams", JSON.stringify(newTeams));
-  };
-
-  const deleteTeam = (id: number) => {
-    const newTeams = teams.filter((team) => team.id !== id);
-    setTeams(newTeams);
-    localStorage.setItem("teams", JSON.stringify(newTeams));
+    router.push("/login");
   };
 
   return (
-    <AuthContext.Provider
-      value={{ user, teams, login, logout, addTeam, updateTeam, deleteTeam }}
-    >
+    <AuthContext.Provider value={{ user, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

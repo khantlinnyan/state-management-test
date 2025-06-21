@@ -13,45 +13,35 @@ import {
   CardContent,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-// import { toast } from "@/components/ui/use-toast";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 
 const LoginPage: React.FC = () => {
   const { login } = useAuth();
   const router = useRouter();
-
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<LoginFormData>({
+  const form = useForm({
     resolver: zodResolver(loginSchema),
+    defaultValues: {
+      username: "",
+    },
   });
 
   const onSubmit = async (data: LoginFormData) => {
     try {
       const success = await login(data.username);
-      router.push("/");
 
       if (success) {
-        // toast({
-        //   title: "Login successful",
-        //   description: `Welcome, ${data.username}!`,
-        // });
-      } else {
-        // toast({
-        //   title: "Login failed",
-        //   description: "Please try again",
-        //   variant: "destructive",
-        // });
+        router.push("/");
       }
     } catch (error) {
-      // toast({
-      //   title: "Error",
-      //   description: "An unexpected error occurred",
-      //   variant: "destructive",
-      // });
+      console.error("Login failed:", error);
     }
   };
 
@@ -65,26 +55,26 @@ const LoginPage: React.FC = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
-              <Input
-                id="username"
-                type="text"
-                placeholder="Enter your username"
-                {...register("username")}
-                error={errors.username?.message}
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="username"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Username</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter your username" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-              {errors.username && (
-                <p className="text-red-500 text-sm mt-1">
-                  {errors.username.message}
-                </p>
-              )}
-            </div>
-            <Button type="submit" className="w-full" disabled={isSubmitting}>
-              {isSubmitting ? "Logging in..." : "Login"}
-            </Button>
-          </form>
+              <Button type="submit" className="w-full">
+                Login
+              </Button>
+            </form>
+          </Form>
         </CardContent>
       </Card>
     </div>
