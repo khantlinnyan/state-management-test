@@ -8,8 +8,9 @@ import { useTeam } from "@/context/TeamContext";
 import { TeamSelectModal } from "./team-select-modal";
 
 const fetchPlayers = async ({ pageParam = 1 }) => {
+  const base_url = process.env.NEXT_PUBLIC_BASE_URL
   const response = await fetch(
-    `${process.env.NEXT_PUBLIC_BASE_URL}?page=${pageParam}&per_page=10`,
+    `${base_url}?page=${pageParam}&per_page=10`,
     {
       headers: {
         "Content-Type": "application/json",
