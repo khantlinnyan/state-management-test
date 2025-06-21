@@ -9,11 +9,11 @@ import { TeamSelectModal } from "./team-select-modal";
 
 const fetchPlayers = async ({ pageParam = 1 }) => {
   const response = await fetch(
-    `${process.env.NEXT_BASE_URL}?page=${pageParam}&per_page=10`,
+    `${process.env.NEXT_PUBLIC_BASE_URL}?page=${pageParam}&per_page=10`,
     {
       headers: {
         "Content-Type": "application/json",
-        Authorization: `${process.env.NEXT_API_KEY}`,
+        Authorization: `${process.env.NEXT_PUBLIC_API_KEY}`,
       },
     }
   );
